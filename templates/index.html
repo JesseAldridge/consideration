@@ -20,28 +20,39 @@
 <script>
 (function() {
   var id_to_text = {};
+  var global_save_timer = null;
+
+  $.getJSON('load', function(id_to_text) {
+    Object.keys(id_to_text).forEach(function(text_key) {
+      var text_obj = id_to_text[text_key]
+      new_text_input(text_obj.x, text_obj.y, text_obj.id, text_obj.string);
+    })
+  });
+
   var canvas = document.querySelector(".canvas");
   var active_text = null;
   var filename = '' + Date.now();
 
   canvas.addEventListener("click", function (e) {
     new_text_input(e.clientX, e.clientY);
+    save_to_server();
   }, false);
 
-  function new_text_input(x, y) {
-    var id = Object.keys(id_to_text).length + 1;
+  function new_text_input(x, y, id, string) {
+    id = id || Object.keys(id_to_text).length + 1;
+
+    var text = active_text = {
+      id: id,
+      string: string || 'text box ' + id,
+      x: x,
+      y: y,
+    };
 
     var input = document.createElement('input');
     input.className = 'text';
     input.id = id;
     input.draggable = 'true';
-
-    var text = active_text = {
-      id: id,
-      string: 'text box ' + id,
-      x: x,
-      y: y,
-    };
+    input.value = text.string;
 
     input.addEventListener('click', function (e) { e.stopPropagation(); }, false);
     input.addEventListener('dragstart', function(e) { });
@@ -49,13 +60,15 @@
       text.x = e.clientX;
       text.y = e.clientY;
     });
+    input.addEventListener('keyup', function(e) {
+      clearTimeout(global_save_timer);
+      global_save_timer = setTimeout(save_to_server, 500);
+      text.string = input.value;
+    });
 
     canvas.appendChild(input);
 
-    id_to_text[id] = active_text;
-
-    json_str = JSON.stringify(id_to_text, null, 2);
-    $.post('save', {filename: filename, content: json_str});
+    id_to_text[id] = text;
   }
 
   function position_inputs() {
@@ -69,6 +82,11 @@
     });
 
     window.requestAnimationFrame(position_inputs);
+  }
+
+  function save_to_server() {
+    json_str = JSON.stringify(id_to_text, null, 2);
+    $.post('save', {filename: filename, content: json_str});
   }
 
   window.requestAnimationFrame(position_inputs);
