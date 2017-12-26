@@ -1,0 +1,76 @@
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
+
+<style>
+.canvas {
+  width: 100%;
+  height: 100%;
+  border: solid 4px;
+}
+
+.text {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+</style>
+
+<div class='canvas'>
+</div>
+
+<script>
+(function() {
+  var id_to_text = {};
+  var canvas = document.querySelector(".canvas");
+  var active_text = null;
+  var filename = '' + Date.now();
+
+  canvas.addEventListener("click", function (e) {
+    new_text_input(e.clientX, e.clientY);
+  }, false);
+
+  function new_text_input(x, y) {
+    var id = Object.keys(id_to_text).length + 1;
+
+    var input = document.createElement('input');
+    input.className = 'text';
+    input.id = id;
+    input.draggable = 'true';
+
+    var text = active_text = {
+      id: id,
+      string: 'text box ' + id,
+      x: x,
+      y: y,
+    };
+
+    input.addEventListener('click', function (e) { e.stopPropagation(); }, false);
+    input.addEventListener('dragstart', function(e) { });
+    input.addEventListener('dragend', function(e) {
+      text.x = e.clientX;
+      text.y = e.clientY;
+    });
+
+    canvas.appendChild(input);
+
+    id_to_text[id] = active_text;
+
+    json_str = JSON.stringify(id_to_text, null, 2);
+    $.post('save', {filename: filename, content: json_str});
+  }
+
+  function position_inputs() {
+    text_inputs = document.querySelectorAll(".text");
+    text_inputs.forEach(function(text_input) {
+      var id = parseInt(text_input.id.match('[0-9]+$')[0]);
+      var text = id_to_text[id];
+
+      text_input.style.left = text.x;
+      text_input.style.top = text.y;
+    });
+
+    window.requestAnimationFrame(position_inputs);
+  }
+
+  window.requestAnimationFrame(position_inputs);
+})();
+</script>
