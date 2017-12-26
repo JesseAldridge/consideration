@@ -60,6 +60,15 @@
       text.x = e.clientX;
       text.y = e.clientY;
     });
+
+    input.addEventListener('keydown', function(e) {
+      if(e.code == 'Backspace' && input.value == '') {
+        input.parentNode.removeChild(input);
+        delete id_to_text[id];
+        save_to_server();
+      }
+    });
+
     input.addEventListener('keyup', function(e) {
       clearTimeout(global_save_timer);
       global_save_timer = setTimeout(save_to_server, 500);
