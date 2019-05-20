@@ -1,47 +1,37 @@
 (function() {
-  let item_type = 'text';
-
-  const text_button = document.getElementById('text-btn')
-  text_button.addEventListener('click', function() {
-    item_type = 'text';
-  })
-
-  const line_button = document.getElementById('line-btn')
-  line_button.addEventListener('click', function() {
-    item_type = 'line';
-    console.log('set item_type:', item_type);
-  })
-
   let line = null;
   const shapes = [];
+  const info_strs = [];
+  for(let i = 0; i < 10; i++)
+    info_strs.push('')
 
   const canvas = document.getElementById("myCanvas");
   canvas.addEventListener('click', function(e) {
-    console.log('clicked canvas')
-
     const x = e.clientX - canvas.getBoundingClientRect().left,
           y = e.clientY - canvas.getBoundingClientRect().top;
 
-    if(item_type == 'text') {
-      const input = document.createElement("input");
-
-      input.style.left = x;
-      input.style.top = y;
-      input.style.position = "absolute";
-      document.getElementsByTagName("BODY")[0].appendChild(input);
+    if(line)
+      line = null;
+    else {
+      line = {type: 'line', x1: x, y1: y, x2: x, y2: y};
+      shapes.push(line);
     }
-    else if(item_type == 'line') {
-      if(line)
-        line = null;
-      else {
-        line = {type: 'line', x1: x, y1: y, x2: x, y2: y};
-        shapes.push(line);
-      }
 
-      redraw();
-    }
+    redraw();
   }, false);
 
+  canvas.addEventListener("dblclick", function(e) {
+    shapes.pop() // pop the last line from the first click
+    const x = e.pageX,
+          y = e.pageY;
+
+    const input = document.createElement("input");
+    document.getElementsByTagName("BODY")[0].appendChild(input);
+    input.style.position = "absolute";
+    input.style.left = x;
+    input.style.top = y;
+    console.log('input.style:', input.style);
+  }, false);
 
   const ctx = canvas.getContext('2d')
   let redraw_timeout = null
@@ -78,6 +68,13 @@
         ctx.stroke();
         ctx.closePath();
       }
+    })
+
+    info_strs[0] = `shape count: ${shapes.length}`
+    info_strs.forEach(function(s, index) {
+      ctx.font = '10pt sans-serif'
+      ctx.textAlign = "left"
+      ctx.fillText(s, 10, 10 + index * 20)
     })
   }
 })();
