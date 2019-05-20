@@ -13,6 +13,8 @@
   })
 
   let line = null;
+  const shapes = [];
+
   const canvas = document.getElementById("myCanvas");
   canvas.addEventListener('click', function(e) {
     console.log('clicked canvas')
@@ -29,9 +31,14 @@
       document.getElementsByTagName("BODY")[0].appendChild(input);
     }
     else if(item_type == 'line') {
-      line = {x1: x, y1: y, x2: x, y2: y};
+      if(line)
+        line = null;
+      else {
+        line = {type: 'line', x1: x, y1: y, x2: x, y2: y};
+        shapes.push(line);
+      }
+
       redraw();
-      console.log('adding line');
     }
   }, false);
 
@@ -45,39 +52,32 @@
           y = e.clientY - canvas.getBoundingClientRect().top;
 
     if(line) {
-      line.x2 = x
-      line.y2 = y
+      line.x2 = x;
+      line.y2 = y;
     }
 
-    redraw()
+    redraw();
   }, false);
 
   function redraw() {
     // if just ran
-    if(last_ran && last_ran > new Date().getTime() - 50) {
-      clearTimeout(redraw_timeout)
-      redraw_timeout = setTimeout(redraw, 50)
-      return
+    if(last_ran && last_ran > new Date().getTime() - 30) {
+      clearTimeout(redraw_timeout);
+      redraw_timeout = setTimeout(redraw, 50);
+      return;
     }
 
-    last_ran = new Date().getTime()
+    last_ran = new Date().getTime();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(100, 100);
-    ctx.stroke();
-    ctx.closePath();
-
-    if(line) {
-      ctx.beginPath();
-      console.log('line:', line.x1, line.y1, line.x2, line.y2);
-      ctx.moveTo(line.x1, line.y1);
-      ctx.lineTo(line.x2, line.y2);
-      ctx.stroke();
-      ctx.closePath();
-    }
+    shapes.forEach(function(shape) {
+      if(shape.type == 'line') {
+        ctx.beginPath();
+        ctx.moveTo(shape.x1, shape.y1);
+        ctx.lineTo(shape.x2, shape.y2);
+        ctx.stroke();
+        ctx.closePath();
+      }
+    })
   }
-
 })();
